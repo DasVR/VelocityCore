@@ -1,0 +1,135 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+        maven { url = 'https://maven.parchmentmc.org' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.+', changing: true
+        classpath 'org.spongepowered:mixingradle:0.7.+'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+
+version = project.mod_version
+group = project.maven_group
+archivesBaseName = project.archives_base_name
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
+
+minecraft {
+    mappings channel: 'official', version: '1.20.1'
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            property 'forge.enabledGameTestNamespaces', 'velocitycore'
+            mods {
+                velocitycore {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            property 'forge.enabledGameTestNamespaces', 'velocitycore'
+            mods {
+                velocitycore {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        gameTestServer {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            property 'forge.enabledGameTestNamespaces', 'velocitycore'
+            mods {
+                velocitycore {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            args '--mod', 'velocitycore', '--all',
+                 '--output', file('src/generated/resources/'),
+                 '--existing', file('src/main/resources/')
+            mods {
+                velocitycore {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+// Mixin refmap generation
+mixin {
+    add sourceSets.main, 'velocitycore.refmap.json'
+    config 'velocitycore.mixins.json'
+}
+
+sourceSets.main.ext.refMap = 'velocitycore.refmap.json'
+
+repositories {
+    // Additional repositories as needed
+}
+
+dependencies {
+    // Forge 1.20.1-47.3.0
+    minecraft 'net.minecraftforge:forge:1.20.1-47.3.0'
+
+    // Mixin annotation processor (built into Forge 1.20.x, but processor must be declared explicitly)
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+
+// Embed MixinConfigs manifest attribute so the loader picks up the mixin config
+jar {
+    manifest {
+        attributes([
+            'Specification-Title'     : 'velocitycore',
+            'Specification-Vendor'    : 'velocitycore',
+            'Specification-Version'   : '1',
+            'Implementation-Title'    : project.name,
+            'Implementation-Version'  : project.jar.archiveVersion,
+            'Implementation-Vendor'   : 'velocitycore',
+            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+            'MixinConfigs'            : 'velocitycore.mixins.json'
+        ])
+    }
+}
+
+jar.finalizedBy('reobfJar')
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/mcmodsrepo"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

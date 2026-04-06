@@ -1,0 +1,111 @@
+PROJECT: VelocityCore — Forge 1.20.1 server+client optimization mod.
+
+CONTEXT:
+- Minecraft Forge 1.20.1, mappings: official 1.20.1, Forge 47.3.0, Java 17
+- Mixin 0.8.5 via SpongePowered (built into Forge 1.20.x)
+- Server-side systems: Dist.DEDICATED_SERVER on all event subscribers
+- Client systems: Dist.CLIENT only, in the client/ package
+- Primary compatibility targets: William Wythers Expanded Ecosphere (WWEE), Chunky Forge
+
+ARCHITECTURE:
+- 15 systems total. Each system is one Java class in system/ or client/
+- All systems are individually toggleable via VCConfig boolean fields
+- ServerTickHandler drives all server systems via TickEvent.ServerTickEvent
+- ClientTickHandler drives client systems via TickEvent.ClientTickEvent
+- ChunkGenThrottle is the single shared budget — all gen work checks hasBudget() before proceeding
+
+SYSTEM MAP:
+  S1  ChunkGenThrottle         — system/ChunkGenThrottle.java
+  S2  SmartChunkCache          — system/SmartChunkCache.java
+  S3  DeferredDecorator        — system/DeferredDecorator.java
+  S4  EntityActivationManager  — system/EntityActivationManager.java
+  S5  SpawnRateLimiter         — system/SpawnRateLimiter.java
+  S6  PreLoadRing              — system/PreLoadRing.java
+  S7  SmartEviction            — system/SmartEviction.java
+  S8  ChunkStatusFastPath      — system/ChunkStatusFastPath.java
+  S9  RegionFileBuffer         — system/RegionFileBuffer.java
+  S10 ModdedMobNormalizer      — system/ModdedMobNormalizer.java
+  S11 MobCapGuard              — system/MobCapGuard.java
+  S12 PathfindingThrottle      — system/PathfindingThrottle.java
+  S13 ChunkPacketPrioritizer   — client/ChunkPacketPrioritizer.java
+  S14 VelocityHintSender       — client/VelocityHintSender.java
+  S15 ClientEntityCuller       — client/ClientEntityCuller.java
+
+MIXIN MAP:
+  MixinServerChunkCache           → net.minecraft.server.level.ServerChunkCache
+  MixinNoiseBasedChunkGenerator   → net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator
+  MixinNaturalSpawner             → net.minecraft.world.level.NaturalSpawner
+  MixinMob                        → net.minecraft.world.entity.Mob
+  MixinPathFinder                 → net.minecraft.world.entity.ai.navigation.PathFinder
+
+THREAD SAFETY:
+- NEVER write block state or LevelChunk data off the main server thread
+- Decoration draining (DeferredDecorator) ONLY runs inside ServerTickEvent on main thread
+- SmartChunkCache uses ThreadLocal — one map per worldgen thread, zero shared mutable state
+- RegionFileBuffer uses a separate I/O thread for warming only — never writes world data
+
+MIXIN RULES:
+- All mixin targets are vanilla classes — never mixin directly into WWEE classes
+- Always use @Inject with CallbackInfo, prefer @At("HEAD") with cancellable=true
+- Never use @Overwrite
+- Add a comment above every @Inject explaining why this injection point was chosen
+- Mixin class names always prefix with Mixin (MixinServerChunkCache etc)
+
+CHUNKY COMPATIBILITY:
+- VelocityCore NEVER generates chunks inside the world border
+- Before any PreLoadRing ticket is issued, verify ChunkStatus on disk == "full" via NBT tag
+- If status is not full, fall back to DeferredDecorator — never issue a speculative ticket
+- Read world border bounds from WorldBorder object at runtime — never hardcode radius
+
+MODDED MOB RULES:
+- ModdedMobNormalizer runs ONCE at server start after all mods finish registration
+- It scans every biome's MobSpawnSettings and normalizes weights to range [5, 80]
+- Formula: weight = clamp(weight * (vanillaBaseline / actualPoolTotal), 5, 80)
+- It writes a full adjustment report to the server log
+- VCConfig.MOB_NORMALIZER_EXEMPTIONS allows per-mod opt-out
+
+CODE STYLE:
+- Mojmap names for all MC classes
+- No reflection unless unavoidable — prefer Mixin @Accessor
+- Javadoc on every public method
+- System.nanoTime() for timing always — never System.currentTimeMillis()
+- All config keys snake_case, all Java identifiers camelCase
+- When a system is disabled via VCConfig, it must be a complete no-op with zero overhead
+
+CONFIG REFERENCE (all keys in config/velocitycore-server.toml unless noted):
+  enable_tps_tracking         = true   (master TPS loop toggle)
+  enable_gen_throttle         = true   (S1)
+  enable_noise_cache          = true   (S2)
+  noise_cache_size            = 4096   (S2, entries per worldgen thread)
+  enable_deferred_decorator   = true   (S3)
+  decoration_per_tick         = 4      (S3, 1-20)
+  enable_preload_ring         = true   (S6, requires Chunky)
+  enable_smart_eviction       = true   (S7)
+  hot_chunk_max               = 512    (S7)
+  enable_fast_path            = true   (S8)
+  enable_region_buffer        = true   (S9)
+  enable_ai_throttle          = true   (S4)
+  enable_spawn_limiter        = true   (S5)
+  enable_mob_normalizer       = true   (S10)
+  mob_normalizer_max_weight   = 80     (S10)
+  mob_normalizer_min_weight   = 5      (S10)
+  mob_normalizer_exemptions   = []     (S10, list of mod IDs)
+  enable_mob_cap_guard        = true   (S11)
+  enable_pathfinding_throttle = true   (S12)
+  enable_chunk_prioritizer    = true   (S13, client toml)
+  enable_velocity_hint        = true   (S14, client toml)
+  enable_entity_culler        = true   (S15, client toml)
+  entity_cull_range           = 64     (S15, blocks)
+
+BUILD ORDER FOR CURSOR PROMPTS:
+  01 VCConfig + VCNetworkChannel           (config first — every system references it)
+  02 ChunkGenThrottle + ServerTickHandler  (heartbeat — verify with /velocitycore status)
+  03 ServerTickHandler wiring              (already covered in 02)
+  04 SpawnRateLimiter + MixinNaturalSpawner
+  05 EntityActivationManager + MixinMob
+  06 ModdedMobNormalizer
+  07 MobCapGuard + PathfindingThrottle + MixinPathFinder
+  08 DeferredDecorator + SmartChunkCache + MixinNoiseBasedChunkGenerator
+  09 PreLoadRing + SmartEviction + RegionFileBuffer
+  10 ChunkStatusFastPath + MixinServerChunkCache
+  11-15 Client jar: ChunkPacketPrioritizer + VelocityHintSender + ClientEntityCuller
