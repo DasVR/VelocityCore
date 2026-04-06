@@ -68,6 +68,14 @@ public final class VCSystemMetrics {
         debugEnabled = enabled;
     }
 
+    public static void clearRuntimeState() {
+        minuteCounters.clear();
+        totalCounters.clear();
+        lastRunTick.clear();
+        minuteWindowStartTick = -1L;
+        debugEnabled = false;
+    }
+
     private static void rotateMinuteWindowIfNeeded(long gameTick) {
         long start = minuteWindowStartTick;
         if (start < 0L) {

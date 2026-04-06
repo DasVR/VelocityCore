@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.server.ServerLifecycleHooks;
@@ -109,10 +110,20 @@ public final class ServerTickHandler {
      */
     @SubscribeEvent
     public static void onServerAboutToStart(ServerAboutToStartEvent event) {
+        gameTick = 0L;
+        lastTelemetryTick = 0L;
+        VCSystemMetrics.clearRuntimeState();
+        PreLoadRing.clearRuntimeState();
         RuntimeSystemGate.runStartupCompatibilityReport();
         if (VCConfig.ENABLE_MOB_NORMALIZER.get()) {
             ModdedMobNormalizer.normalize(event.getServer());
         }
+    }
+
+    @SubscribeEvent
+    public static void onServerStopped(ServerStoppedEvent event) {
+        PreLoadRing.clearRuntimeState();
+        VCSystemMetrics.clearRuntimeState();
     }
 
     /**

@@ -56,8 +56,17 @@ public final class PreLoadRing {
     public static void tick(MinecraftServer server, long gameTick) {
         if (!VCConfig.ENABLE_PRELOAD_RING.get()) return;
         if (!ChunkGenThrottle.hasBudget()) return;
+        var online = server.getPlayerList().getPlayers();
+        if (online.isEmpty()) {
+            playerStates.clear();
+            return;
+        }
+        var onlineIds = new java.util.HashSet<UUID>();
+        for (ServerPlayer p : online) onlineIds.add(p.getUUID());
+        playerStates.keySet().removeIf(id -> !onlineIds.contains(id));
+        VCSystemMetrics.increment("preload.players_tracked", playerStates.size(), gameTick);
 
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+        for (ServerPlayer player : online) {
             PlayerVelocityState state = playerStates.computeIfAbsent(player.getUUID(), ignored -> new PlayerVelocityState());
             Vec3 current = player.position();
 
@@ -94,7 +103,13 @@ public final class PreLoadRing {
             List<ChunkPos> ring = computeRing(playerChunk, state.vx, state.vz, readAhead);
             ServerLevel level = player.serverLevel();
             for (ChunkPos pos : ring) {
-                issueTicket(level, pos.x, pos.z);
+                TicketIssueResult result = issueTicket(level, pos.x, pos.z);
+                switch (result) {
+                    case ISSUED -> VCSystemMetrics.increment("preload.tickets_issued", 1L, gameTick);
+                    case SKIPPED_BORDER -> VCSystemMetrics.increment("preload.skipped_border", 1L, gameTick);
+                    case SKIPPED_NOT_FULL -> VCSystemMetrics.increment("preload.skipped_not_full", 1L, gameTick);
+                    case SKIPPED_BUDGET -> VCSystemMetrics.increment("preload.skipped_budget", 1L, gameTick);
+                }
             }
         }
     }
@@ -175,13 +190,30 @@ public final class PreLoadRing {
         return ring;
     }
 
-    private static void issueTicket(ServerLevel level, int chunkX, int chunkZ) {
+    private enum TicketIssueResult { ISSUED, SKIPPED_BORDER, SKIPPED_NOT_FULL, SKIPPED_BUDGET }
+
+    private static TicketIssueResult issueTicket(ServerLevel level, int chunkX, int chunkZ) {
         ChunkPos pos = new ChunkPos(chunkX, chunkZ);
         WorldBorder border = level.getWorldBorder();
-        if (!border.isWithinBounds(pos)) return;
-        if (!isChunkFullOnDisk(level, chunkX, chunkZ)) return;
-        if (!ChunkGenThrottle.hasBudget()) return;
+        if (!border.isWithinBounds(pos)) return TicketIssueResult.SKIPPED_BORDER;
+        if (!isChunkFullOnDisk(level, chunkX, chunkZ)) return TicketIssueResult.SKIPPED_NOT_FULL;
+        if (!ChunkGenThrottle.hasBudget()) return TicketIssueResult.SKIPPED_BUDGET;
         level.getChunkSource().addRegionTicket(TicketType.UNKNOWN, pos, 1, pos);
+        return TicketIssueResult.ISSUED;
+    }
+
+    public static int getTrackedPlayerCount() {
+        return playerStates.size();
+    }
+
+    public static int getDiskStatusCacheSize() {
+        return diskStatusCache.size();
+    }
+
+    public static void clearRuntimeState() {
+        playerStates.clear();
+        diskStatusCache.clear();
+        diskStatusCacheTime.clear();
     }
 
     private PreLoadRing() {}
