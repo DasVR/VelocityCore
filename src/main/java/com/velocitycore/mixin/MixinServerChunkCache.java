@@ -3,6 +3,7 @@ package com.velocitycore.mixin;
 import com.velocitycore.config.VCConfig;
 import com.velocitycore.system.ChunkStatusFastPath;
 import com.velocitycore.system.RegionFileBuffer;
+import com.velocitycore.system.RuntimeSystemGate;
 import com.velocitycore.system.SmartEviction;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
@@ -38,7 +39,7 @@ public abstract class MixinServerChunkCache {
     )
     private void vc_fastPathCheck(int chunkX, int chunkZ, ChunkStatus requiredStatus, boolean load,
             CallbackInfoReturnable<ChunkAccess> cir) {
-        if (!VCConfig.ENABLE_FAST_PATH.get()) return;
+        if (!RuntimeSystemGate.isEnabled("S8_FAST_PATH", VCConfig.ENABLE_FAST_PATH.get())) return;
         ChunkAccess fast = ChunkStatusFastPath.tryFastLoad(
             (ServerChunkCache)(Object)this, chunkX, chunkZ, requiredStatus);
         if (fast != null) cir.setReturnValue(fast);
@@ -52,7 +53,7 @@ public abstract class MixinServerChunkCache {
         at = @At("RETURN")
     )
     private void vc_recordAccess(int chunkX, int chunkZ, CallbackInfoReturnable<LevelChunk> cir) {
-        if (!VCConfig.ENABLE_SMART_EVICTION.get()) return;
+        if (!RuntimeSystemGate.isEnabled("S7_SMART_EVICTION", VCConfig.ENABLE_SMART_EVICTION.get())) return;
         if (cir.getReturnValue() != null) {
             SmartEviction.recordAccess(new ChunkPos(chunkX, chunkZ));
         }
@@ -67,7 +68,7 @@ public abstract class MixinServerChunkCache {
     )
     private void vc_regionWarm(int chunkX, int chunkZ, ChunkStatus requiredStatus, boolean load,
             CallbackInfoReturnable<ChunkAccess> cir) {
-        if (!VCConfig.ENABLE_REGION_BUFFER.get()) return;
+        if (!RuntimeSystemGate.isEnabled("S9_REGION_BUFFER", VCConfig.ENABLE_REGION_BUFFER.get())) return;
         if (!load || cir.getReturnValue() == null) return;
         if (((ServerChunkCache)(Object)this).getLevel() instanceof ServerLevel level) {
             RegionFileBuffer.onChunkRead(level, new ChunkPos(chunkX, chunkZ));

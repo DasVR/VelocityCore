@@ -55,7 +55,7 @@ public final class ServerTickHandler {
         if (server == null) return;
 
         // S3: drain deferred decoration tasks (main-thread safe block writes)
-        if (VCConfig.ENABLE_DEFERRED_DECORATOR.get()) {
+        if (RuntimeSystemGate.isEnabled("S3_DEFERRED_DECORATOR", VCConfig.ENABLE_DEFERRED_DECORATOR.get())) {
             for (ServerLevel level : server.getAllLevels()) {
                 DeferredDecorator.drainTick(level);
             }
@@ -71,7 +71,7 @@ public final class ServerTickHandler {
         }
 
         // S7: evict gone-cold chunks if pruning interval has elapsed
-        if (VCConfig.ENABLE_SMART_EVICTION.get()) {
+        if (RuntimeSystemGate.isEnabled("S7_SMART_EVICTION", VCConfig.ENABLE_SMART_EVICTION.get())) {
             SmartEviction.pruneIfDue(gameTick);
             VCSystemMetrics.markSystemRun("S7_SmartEviction", gameTick);
             VCSystemMetrics.increment("eviction.hot_chunks", SmartEviction.getHotChunkCount(), gameTick);
@@ -90,7 +90,7 @@ public final class ServerTickHandler {
             VCSystemMetrics.markSystemRun("S4_EntityActivation", gameTick);
         }
 
-        if (VCConfig.ENABLE_REGION_BUFFER.get()) {
+        if (RuntimeSystemGate.isEnabled("S9_REGION_BUFFER", VCConfig.ENABLE_REGION_BUFFER.get())) {
             VCSystemMetrics.increment("region.warm_regions", RegionFileBuffer.getWarmRegionCount(), gameTick);
         }
 
@@ -228,13 +228,16 @@ public final class ServerTickHandler {
         sb.append("\n--- Verbose ---\n");
         sb.append(systemLine("S1 ChunkGenThrottle", VCConfig.ENABLE_GEN_THROTTLE.get(), true, "S1_ChunkGenThrottle")).append("\n");
         sb.append(systemLine("S2 SmartChunkCache", VCConfig.ENABLE_NOISE_CACHE.get(), true, "S2_SmartChunkCache")).append("\n");
-        sb.append(systemLine("S3 DeferredDecorator", VCConfig.ENABLE_DEFERRED_DECORATOR.get(), true, "S3_DeferredDecorator")).append("\n");
+        sb.append(systemLine("S3 DeferredDecorator", VCConfig.ENABLE_DEFERRED_DECORATOR.get(),
+            RuntimeSystemGate.isEnabled("S3_DEFERRED_DECORATOR", true), "S3_DeferredDecorator")).append("\n");
         sb.append(systemLine("S4 EntityActivation", VCConfig.ENABLE_AI_THROTTLE.get(), true, "S4_EntityActivation")).append("\n");
         sb.append(systemLine("S5 SpawnRateLimiter", VCConfig.ENABLE_SPAWN_LIMITER.get(), true, "S5_SpawnRateLimiter")).append("\n");
         sb.append(systemLine("S6 PreLoadRing", VCConfig.ENABLE_PRELOAD_RING.get(), true, "S6_PreLoadRing")).append("\n");
-        sb.append(systemLine("S7 SmartEviction", VCConfig.ENABLE_SMART_EVICTION.get(), true, "S7_SmartEviction")).append("\n");
+        sb.append(systemLine("S7 SmartEviction", VCConfig.ENABLE_SMART_EVICTION.get(),
+            RuntimeSystemGate.isEnabled("S7_SMART_EVICTION", true), "S7_SmartEviction")).append("\n");
         sb.append(systemLine("S8 ChunkStatusFastPath", VCConfig.ENABLE_FAST_PATH.get(), true, "S8_ChunkStatusFastPath")).append("\n");
-        sb.append(systemLine("S9 RegionFileBuffer", VCConfig.ENABLE_REGION_BUFFER.get(), true, "S9_RegionFileBuffer")).append("\n");
+        sb.append(systemLine("S9 RegionFileBuffer", VCConfig.ENABLE_REGION_BUFFER.get(),
+            RuntimeSystemGate.isEnabled("S9_REGION_BUFFER", true), "S9_RegionFileBuffer")).append("\n");
         sb.append(systemLine("S10 ModdedMobNormalizer", VCConfig.ENABLE_MOB_NORMALIZER.get(), true, "S10_ModdedMobNormalizer")).append("\n");
         sb.append(systemLine("S11 MobCapGuard", VCConfig.ENABLE_MOB_CAP_GUARD.get(), true, "S11_MobCapGuard")).append("\n");
         sb.append(systemLine("S12 PathfindingThrottle", VCConfig.ENABLE_PATHFINDING_THROTTLE.get(),

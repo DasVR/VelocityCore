@@ -2,6 +2,8 @@ package com.velocitycore.system;
 
 import com.velocitycore.VelocityCoreMod;
 import com.velocitycore.config.VCConfig;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.world.level.pathfinder.BinaryHeap;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.PathFinder;
@@ -46,15 +48,11 @@ public final class RuntimeSystemGate {
     public static void runStartupCompatibilityReport() {
         boolean strict = VCConfig.STRICT_MIXIN_VALIDATION.get();
 
-        // S12 Pathfinding throttle is version-fragile; keep an explicit gate.
-        boolean pathfindingHookLooksCompatible = validatePathfindingHooks();
-        if (!pathfindingHookLooksCompatible) {
-            if (strict) {
-                throw new IllegalStateException("VelocityCore strict validation failed: S12 pathfinding hook mismatch");
-            }
-            disable("S12_PATHFINDING");
-            VelocityCoreMod.LOGGER.warn("[VelocityCore] Disabled S12_PATHFINDING due to compatibility validation.");
-        }
+        validateOrDisable("S12_PATHFINDING", strict, validatePathfindingHooks(), "pathfinding hook mismatch");
+        validateOrDisable("S3_DEFERRED_DECORATOR", strict, validateDeferredDecoratorHooks(), "deferred decorator hook mismatch");
+        validateOrDisable("S8_FAST_PATH", strict, validateFastPathHooks(), "fast-path hook mismatch");
+        validateOrDisable("S7_SMART_EVICTION", strict, validateFastPathHooks(), "smart-eviction hook mismatch");
+        validateOrDisable("S9_REGION_BUFFER", strict, validateFastPathHooks(), "region-buffer hook mismatch");
 
         lastCompatibilityReport = "strict=" + strict + " disabled=" + disabledSystems;
         if (!disabledSystems.isEmpty()) {
@@ -79,6 +77,42 @@ public final class RuntimeSystemGate {
         } catch (ReflectiveOperationException e) {
             return false;
         }
+    }
+
+    private static boolean validateDeferredDecoratorHooks() {
+        try {
+            Method apply = ChunkGenerator.class.getDeclaredMethod(
+                "applyBiomeDecoration",
+                net.minecraft.world.level.WorldGenLevel.class,
+                net.minecraft.world.level.chunk.ChunkAccess.class,
+                net.minecraft.world.level.StructureManager.class
+            );
+            return apply != null;
+        } catch (ReflectiveOperationException e) {
+            return false;
+        }
+    }
+
+    private static boolean validateFastPathHooks() {
+        try {
+            Method getChunk = ServerChunkCache.class.getDeclaredMethod(
+                "getChunk",
+                int.class, int.class, net.minecraft.world.level.chunk.ChunkStatus.class, boolean.class
+            );
+            Method getChunkNow = ServerChunkCache.class.getDeclaredMethod("getChunkNow", int.class, int.class);
+            return getChunk != null && getChunkNow != null;
+        } catch (ReflectiveOperationException e) {
+            return false;
+        }
+    }
+
+    private static void validateOrDisable(String systemKey, boolean strict, boolean valid, String reason) {
+        if (valid) return;
+        if (strict) {
+            throw new IllegalStateException("VelocityCore strict validation failed: " + systemKey + " " + reason);
+        }
+        disable(systemKey);
+        VelocityCoreMod.LOGGER.warn("[VelocityCore] Disabled {} due to compatibility validation: {}", systemKey, reason);
     }
 
     private RuntimeSystemGate() {}

@@ -2,6 +2,7 @@ package com.velocitycore.mixin;
 
 import com.velocitycore.config.VCConfig;
 import com.velocitycore.system.DeferredDecorator;
+import com.velocitycore.system.RuntimeSystemGate;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -29,7 +30,7 @@ public abstract class MixinChunkGenerator {
     )
     private void vc_deferDecoration(WorldGenLevel level, ChunkAccess chunk,
             StructureManager structureManager, CallbackInfo ci) {
-        if (VCConfig.ENABLE_DEFERRED_DECORATOR.get()) {
+        if (RuntimeSystemGate.isEnabled("S3_DEFERRED_DECORATOR", VCConfig.ENABLE_DEFERRED_DECORATOR.get())) {
             DeferredDecorator.enqueue(level, (ChunkGenerator) (Object) this, chunk.getPos());
             ci.cancel();
         }
