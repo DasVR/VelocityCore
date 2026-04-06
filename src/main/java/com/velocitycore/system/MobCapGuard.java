@@ -3,9 +3,9 @@ package com.velocitycore.system;
 import com.velocitycore.config.VCConfig;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityTypeTest;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.level.entity.EntityTypeTest;
 
 import java.util.Map;
 

@@ -1,0 +1,41 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+license = "MIT"
+issueTrackerURL = "https://github.com/velocitycore/velocitycore/issues"
+
+[[mods]]
+    modId = "velocitycore"
+    version = "1.0.0"
+    displayName = "VelocityCore"
+    description = '''
+VelocityCore is a Forge 1.20.1 server+client optimization mod delivering
+smooth, lag-free gameplay on heavily modded servers. 15 systems target chunk
+generation cost, chunk I/O latency, modded mob spawning imbalance, and
+client-side rendering overhead.
+
+Compatible with William Wythers Expanded Ecosphere (WWEE) and Chunky Forge.
+All 15 systems are independently toggleable via config.
+    '''
+    logoFile = "velocitycore.png"
+    authors = "VelocityCore Team"
+
+    [[mods.dependencies.velocitycore]]
+        modId = "forge"
+        mandatory = true
+        versionRange = "[47.3,)"
+        ordering = "NONE"
+        side = "BOTH"
+
+    [[mods.dependencies.velocitycore]]
+        modId = "minecraft"
+        mandatory = true
+        versionRange = "[1.20.1,1.21)"
+        ordering = "NONE"
+        side = "BOTH"
+
+# Mixin targets (all vanilla classes — never WWEE or other mod classes):
+#   net.minecraft.server.level.ServerChunkCache        → MixinServerChunkCache
+#   net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator → MixinNoiseBasedChunkGenerator
+#   net.minecraft.world.level.NaturalSpawner           → MixinNaturalSpawner
+#   net.minecraft.world.entity.Mob                     → MixinMob
+#   net.minecraft.world.entity.ai.navigation.PathFinder → MixinPathFinder

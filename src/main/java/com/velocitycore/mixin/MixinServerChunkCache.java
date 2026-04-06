@@ -69,7 +69,8 @@ public abstract class MixinServerChunkCache {
             CallbackInfoReturnable<ChunkAccess> cir) {
         if (!VCConfig.ENABLE_REGION_BUFFER.get()) return;
         if (!load || cir.getReturnValue() == null) return;
-        ServerLevel level = ((ServerChunkCache)(Object)this).getLevel();
-        RegionFileBuffer.onChunkRead(level, new ChunkPos(chunkX, chunkZ));
+        if (((ServerChunkCache)(Object)this).getLevel() instanceof ServerLevel level) {
+            RegionFileBuffer.onChunkRead(level, new ChunkPos(chunkX, chunkZ));
+        }
     }
 }

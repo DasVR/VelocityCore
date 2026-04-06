@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Specification-Title: velocitycore
+Specification-Vendor: velocitycore
+Specification-Version: 1
+Implementation-Title: VelocityCore
+Implementation-Version: 1.0.0
+Implementation-Vendor: velocitycore
+Implementation-Timestamp: 2026-04-06T09:13:02-0400
+MixinConfigs: velocitycore.mixins.json
+

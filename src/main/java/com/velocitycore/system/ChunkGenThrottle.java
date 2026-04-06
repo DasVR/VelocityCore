@@ -1,5 +1,7 @@
 package com.velocitycore.system;
 
+import com.velocitycore.config.VCConfig;
+
 /**
  * S1 — ChunkGenThrottle
  *
@@ -28,7 +30,17 @@ public final class ChunkGenThrottle {
      * Records tick start time, resets consumed budget, updates EMA from previous tick.
      */
     public static void beginTick() {
-        // TODO: implement — see prompts/02_chunkgenthrottle.md
+        long now = System.nanoTime();
+        if (tickStartNanos != 0L && VCConfig.ENABLE_TPS_TRACKING.get()) {
+            long elapsed = now - tickStartNanos;
+            smoothedTickNanos = (EMA_ALPHA * elapsed) + ((1.0 - EMA_ALPHA) * smoothedTickNanos);
+            double calculated = 1_000_000_000.0 / smoothedTickNanos;
+            smoothedTps = Math.min(20.0, calculated);
+        } else if (!VCConfig.ENABLE_TPS_TRACKING.get()) {
+            smoothedTps = 20.0;
+        }
+        tickStartNanos = now;
+        consumedNanos = 0L;
     }
 
     /**
@@ -37,8 +49,8 @@ public final class ChunkGenThrottle {
      * @return true if (consumedNanos < budgetNanos())
      */
     public static boolean hasBudget() {
-        // TODO: implement
-        return true;
+        if (!VCConfig.ENABLE_TPS_TRACKING.get() || !VCConfig.ENABLE_GEN_THROTTLE.get()) return true;
+        return consumedNanos < budgetNanos();
     }
 
     /**
@@ -47,7 +59,8 @@ public final class ChunkGenThrottle {
      * @param nanos nanoseconds consumed by the work unit
      */
     public static void charge(long nanos) {
-        // TODO: implement
+        if (nanos <= 0L) return;
+        consumedNanos += nanos;
     }
 
     /**
@@ -66,13 +79,29 @@ public final class ChunkGenThrottle {
      * @return status string
      */
     public static String getStatusString() {
-        // TODO: implement
-        return String.format("TPS=%.1f budget=?ms consumed=?ms", smoothedTps);
+        long budget = budgetNanos();
+        String tier;
+        if (smoothedTps >= 19.5) tier = "HIGH";
+        else if (smoothedTps >= 17.0) tier = "MEDIUM";
+        else if (smoothedTps >= 15.0) tier = "LOW";
+        else tier = "CRITICAL";
+        return String.format(
+            "TPS=%.1f budget=%.1fms consumed=%.1fms tier=%s",
+            getSmoothedTps(),
+            budget / 1_000_000.0,
+            consumedNanos / 1_000_000.0,
+            tier
+        );
     }
 
     private static long budgetNanos() {
-        // TODO: implement tier logic
-        return 6_000_000L;
+        if (!VCConfig.ENABLE_TPS_TRACKING.get() || !VCConfig.ENABLE_GEN_THROTTLE.get()) {
+            return Long.MAX_VALUE;
+        }
+        if (smoothedTps >= 19.5) return 6_000_000L;
+        if (smoothedTps >= 17.0) return 3_000_000L;
+        if (smoothedTps >= 15.0) return 1_000_000L;
+        return 200_000L;
     }
 
     private ChunkGenThrottle() {}

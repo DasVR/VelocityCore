@@ -2,6 +2,7 @@ package com.velocitycore.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 
 import java.util.List;
@@ -139,8 +140,8 @@ public final class VCConfig {
      * @param modContainer the active ModContainer from FMLJavaModLoadingContext
      */
     public static void register(ModContainer modContainer) {
-        modContainer.registerConfig(ModConfig.Type.SERVER, SERVER_SPEC, "velocitycore-server.toml");
-        modContainer.registerConfig(ModConfig.Type.CLIENT, CLIENT_SPEC, "velocitycore-client.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, SERVER_SPEC, "velocitycore-server.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, CLIENT_SPEC, "velocitycore-client.toml");
     }
 
     private VCConfig() {}

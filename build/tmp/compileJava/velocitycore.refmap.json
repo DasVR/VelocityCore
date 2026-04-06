@@ -1,0 +1,52 @@
+{
+  "mappings": {
+    "com/velocitycore/mixin/MixinNoiseBasedChunkGenerator": {
+      "Lnet/minecraft/world/level/biome/Climate$Sampler;sample(III)Lnet/minecraft/world/level/biome/Climate$TargetPoint;": "Lnet/minecraft/world/level/biome/Climate$Sampler;m_183445_(III)Lnet/minecraft/world/level/biome/Climate$TargetPoint;",
+      "fillFromNoise": "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;m_213974_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;"
+    },
+    "com/velocitycore/mixin/MixinNaturalSpawner": {
+      "spawnForChunk": "Lnet/minecraft/world/level/NaturalSpawner;m_47029_(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;ZZZ)V",
+      "spawnCategoryForChunk": "Lnet/minecraft/world/level/NaturalSpawner;m_47045_(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V"
+    },
+    "com/velocitycore/mixin/MixinServerChunkCache": {
+      "getChunkNow": "Lnet/minecraft/server/level/ServerChunkCache;m_7131_(II)Lnet/minecraft/world/level/chunk/LevelChunk;",
+      "getChunk(IILnet/minecraft/world/level/chunk/ChunkStatus;Z)Lnet/minecraft/world/level/chunk/ChunkAccess;": "Lnet/minecraft/server/level/ServerChunkCache;m_7587_(IILnet/minecraft/world/level/chunk/ChunkStatus;Z)Lnet/minecraft/world/level/chunk/ChunkAccess;"
+    },
+    "com/velocitycore/mixin/MixinChunkGenerator": {
+      "applyBiomeDecoration": "Lnet/minecraft/world/level/chunk/ChunkGenerator;m_213609_(Lnet/minecraft/world/level/WorldGenLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/world/level/StructureManager;)V"
+    },
+    "com/velocitycore/mixin/MixinPathFinder": {
+      "Lnet/minecraft/world/level/pathfinder/BinaryHeap;pop()Lnet/minecraft/world/level/pathfinder/Node;": "Lnet/minecraft/world/level/pathfinder/BinaryHeap;m_77091_()Lnet/minecraft/world/level/pathfinder/Node;",
+      "findPath": "Lnet/minecraft/world/level/pathfinder/PathFinder;m_77427_(Lnet/minecraft/world/level/PathNavigationRegion;Lnet/minecraft/world/entity/Mob;Ljava/util/Set;FIF)Lnet/minecraft/world/level/pathfinder/Path;"
+    },
+    "com/velocitycore/mixin/MixinMob": {
+      "tick": "Lnet/minecraft/world/entity/Mob;m_8119_()V"
+    }
+  },
+  "data": {
+    "searge": {
+      "com/velocitycore/mixin/MixinNoiseBasedChunkGenerator": {
+        "Lnet/minecraft/world/level/biome/Climate$Sampler;sample(III)Lnet/minecraft/world/level/biome/Climate$TargetPoint;": "Lnet/minecraft/world/level/biome/Climate$Sampler;m_183445_(III)Lnet/minecraft/world/level/biome/Climate$TargetPoint;",
+        "fillFromNoise": "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;m_213974_(Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/levelgen/blending/Blender;Lnet/minecraft/world/level/levelgen/RandomState;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;"
+      },
+      "com/velocitycore/mixin/MixinNaturalSpawner": {
+        "spawnForChunk": "Lnet/minecraft/world/level/NaturalSpawner;m_47029_(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;ZZZ)V",
+        "spawnCategoryForChunk": "Lnet/minecraft/world/level/NaturalSpawner;m_47045_(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V"
+      },
+      "com/velocitycore/mixin/MixinServerChunkCache": {
+        "getChunkNow": "Lnet/minecraft/server/level/ServerChunkCache;m_7131_(II)Lnet/minecraft/world/level/chunk/LevelChunk;",
+        "getChunk(IILnet/minecraft/world/level/chunk/ChunkStatus;Z)Lnet/minecraft/world/level/chunk/ChunkAccess;": "Lnet/minecraft/server/level/ServerChunkCache;m_7587_(IILnet/minecraft/world/level/chunk/ChunkStatus;Z)Lnet/minecraft/world/level/chunk/ChunkAccess;"
+      },
+      "com/velocitycore/mixin/MixinChunkGenerator": {
+        "applyBiomeDecoration": "Lnet/minecraft/world/level/chunk/ChunkGenerator;m_213609_(Lnet/minecraft/world/level/WorldGenLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/world/level/StructureManager;)V"
+      },
+      "com/velocitycore/mixin/MixinPathFinder": {
+        "Lnet/minecraft/world/level/pathfinder/BinaryHeap;pop()Lnet/minecraft/world/level/pathfinder/Node;": "Lnet/minecraft/world/level/pathfinder/BinaryHeap;m_77091_()Lnet/minecraft/world/level/pathfinder/Node;",
+        "findPath": "Lnet/minecraft/world/level/pathfinder/PathFinder;m_77427_(Lnet/minecraft/world/level/PathNavigationRegion;Lnet/minecraft/world/entity/Mob;Ljava/util/Set;FIF)Lnet/minecraft/world/level/pathfinder/Path;"
+      },
+      "com/velocitycore/mixin/MixinMob": {
+        "tick": "Lnet/minecraft/world/entity/Mob;m_8119_()V"
+      }
+    }
+  }
+}

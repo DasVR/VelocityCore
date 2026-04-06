@@ -3,8 +3,8 @@ package com.velocitycore.system;
 import com.velocitycore.config.VCConfig;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.levelgen.WorldGenLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -58,7 +58,7 @@ public final class DeferredDecorator {
         if (!VCConfig.ENABLE_DEFERRED_DECORATOR.get()) {
             try {
                 generator.applyBiomeDecoration(level, level.getChunk(chunkPos.x, chunkPos.z),
-                    level.structureManager());
+                    level.getLevel().structureManager());
             } catch (Exception e) {
                 LOGGER.warn("Inline decoration failed at {}: {}", chunkPos, e.getMessage());
             }
@@ -87,7 +87,7 @@ public final class DeferredDecorator {
                 task.generator.applyBiomeDecoration(
                     task.level,
                     task.level.getChunk(task.chunkPos.x, task.chunkPos.z),
-                    task.level.structureManager()
+                    task.level.getLevel().structureManager()
                 );
             } catch (Exception e) {
                 LOGGER.warn("Decoration failed at {}: {}", task.chunkPos, e.getMessage());
