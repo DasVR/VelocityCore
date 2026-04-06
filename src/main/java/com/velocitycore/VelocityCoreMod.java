@@ -27,7 +27,7 @@ import org.apache.logging.log4j.Logger;
 public class VelocityCoreMod {
 
     public static final String MOD_ID = "velocitycore";
-    private static final Logger LOGGER = LogManager.getLogger("VelocityCore");
+    public static final Logger LOGGER = LogManager.getLogger("VelocityCore");
 
     public VelocityCoreMod() {
         // Step 1: Register configs
