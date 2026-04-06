@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.velocitycore.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "velocitycore.refmap.json",
+  "mixins": [
+    "MixinServerChunkCache",
+    "MixinNoiseBasedChunkGenerator",
+    "MixinNaturalSpawner",
+    "MixinMob",
+    "MixinPathFinder"
+  ],
+  "client": [],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
