@@ -49,6 +49,11 @@ public final class VCSystemMetrics {
         return "minute={" + minute + "} total={" + total + "}";
     }
 
+    public static long getTotalCounter(String key) {
+        LongAdder v = totalCounters.get(key);
+        return v == null ? 0L : v.sum();
+    }
+
     public static void resetCounters(long gameTick) {
         minuteCounters.clear();
         totalCounters.clear();

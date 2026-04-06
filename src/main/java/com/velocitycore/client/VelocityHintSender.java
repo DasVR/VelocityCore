@@ -2,6 +2,7 @@ package com.velocitycore.client;
 
 import com.velocitycore.config.VCConfig;
 import com.velocitycore.network.VCNetworkChannel;
+import com.velocitycore.system.VCSystemMetrics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.entity.vehicle.Boat;
@@ -64,6 +65,7 @@ public final class VelocityHintSender {
             lastType = type;
             VCNetworkChannel.INSTANCE.sendToServer(
                 new VCNetworkChannel.VelocityHintPacket(vx, vy, vz, type));
+            VCSystemMetrics.increment("client.s14.velocity_hints_sent", 1L, 0L);
         }
     }
 

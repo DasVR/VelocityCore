@@ -2,6 +2,8 @@ package com.velocitycore.network;
 
 import com.velocitycore.system.PreLoadRing;
 import com.velocitycore.config.VCConfig;
+import com.velocitycore.system.EntityActivationManager;
+import com.velocitycore.system.VCSystemMetrics;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -97,10 +99,13 @@ public final class VCNetworkChannel {
         public void handle(Supplier<NetworkEvent.Context> ctxSupplier) {
             NetworkEvent.Context ctx = ctxSupplier.get();
             ctx.enqueueWork(() -> {
+                long tick = EntityActivationManager.getGameTick();
+                VCSystemMetrics.increment("network.velocity_hint_received", 1L, tick);
                 if (!VCConfig.ENABLE_PRELOAD_RING.get()) return;
                 ServerPlayer player = ctx.getSender();
                 if (player == null) return;
                 PreLoadRing.receiveVelocityHint(player, vx, vy, vz, movementType);
+                VCSystemMetrics.increment("network.velocity_hint_applied", 1L, tick);
             });
             ctx.setPacketHandled(true);
         }

@@ -220,6 +220,9 @@ public final class ServerTickHandler {
         sb.append("S5 last-run: ").append(VCSystemMetrics.getLastRunTick("S5_SpawnRateLimiter")).append("\n");
         sb.append("S6 last-run: ").append(VCSystemMetrics.getLastRunTick("S6_PreLoadRing")).append("\n");
         sb.append("S7 last-run: ").append(VCSystemMetrics.getLastRunTick("S7_SmartEviction")).append("\n");
+        sb.append("S13 last-run: ").append(VCSystemMetrics.getLastRunTick("S13_ChunkPacketPrioritizer")).append("\n");
+        sb.append("S14 last-run: ").append(VCSystemMetrics.getLastRunTick("S14_VelocityHintSender")).append("\n");
+        sb.append("S15 last-run: ").append(VCSystemMetrics.getLastRunTick("S15_ClientEntityCuller")).append("\n");
         sb.append("S5 cooldown entries: ").append(SpawnRateLimiter.getTrackedChunkCount()).append("\n");
         sb.append("S7 tracked chunks: ").append(SmartEviction.getTrackedChunkCount()).append("\n");
         sb.append("S7 decay tick: ").append(SmartEviction.getLastDecayTick()).append("\n");
