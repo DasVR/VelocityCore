@@ -66,6 +66,7 @@ public final class ServerTickHandler {
         if (VCConfig.ENABLE_SPAWN_LIMITER.get()) {
             SpawnRateLimiter.pruneTick(gameTick);
             VCSystemMetrics.markSystemRun("S5_SpawnRateLimiter", gameTick);
+            VCSystemMetrics.increment("spawn.cooldown_entries", SpawnRateLimiter.getTrackedChunkCount(), gameTick);
         }
 
         // S7: evict gone-cold chunks if pruning interval has elapsed
@@ -73,6 +74,7 @@ public final class ServerTickHandler {
             SmartEviction.pruneIfDue(gameTick);
             VCSystemMetrics.markSystemRun("S7_SmartEviction", gameTick);
             VCSystemMetrics.increment("eviction.hot_chunks", SmartEviction.getHotChunkCount(), gameTick);
+            VCSystemMetrics.increment("eviction.tracked_chunks", SmartEviction.getTrackedChunkCount(), gameTick);
         }
 
         // S6: issue read-ahead tickets for predicted player positions
@@ -85,6 +87,10 @@ public final class ServerTickHandler {
         if (VCConfig.ENABLE_AI_THROTTLE.get()) {
             EntityActivationManager.setGameTick(gameTick);
             VCSystemMetrics.markSystemRun("S4_EntityActivation", gameTick);
+        }
+
+        if (VCConfig.ENABLE_REGION_BUFFER.get()) {
+            VCSystemMetrics.increment("region.warm_regions", RegionFileBuffer.getWarmRegionCount(), gameTick);
         }
 
         if ((gameTick - lastTelemetryTick) >= 1200L) {
@@ -200,6 +206,9 @@ public final class ServerTickHandler {
         if (VCConfig.ENABLE_PATHFINDING_THROTTLE.get()) active++;
 
         sb.append("Active systems: ").append(active).append("/12 (server)");
+        if (!RuntimeSystemGate.getDisabledSystems().isEmpty()) {
+            sb.append("\nDegraded systems: ").append(RuntimeSystemGate.getDisabledSystems());
+        }
         return sb.toString();
     }
 
@@ -211,6 +220,11 @@ public final class ServerTickHandler {
         sb.append("S5 last-run: ").append(VCSystemMetrics.getLastRunTick("S5_SpawnRateLimiter")).append("\n");
         sb.append("S6 last-run: ").append(VCSystemMetrics.getLastRunTick("S6_PreLoadRing")).append("\n");
         sb.append("S7 last-run: ").append(VCSystemMetrics.getLastRunTick("S7_SmartEviction")).append("\n");
+        sb.append("S5 cooldown entries: ").append(SpawnRateLimiter.getTrackedChunkCount()).append("\n");
+        sb.append("S7 tracked chunks: ").append(SmartEviction.getTrackedChunkCount()).append("\n");
+        sb.append("S7 decay tick: ").append(SmartEviction.getLastDecayTick()).append("\n");
+        sb.append("S9 warmed regions: ").append(RegionFileBuffer.getWarmRegionCount()).append("\n");
+        sb.append("Compatibility report: ").append(RuntimeSystemGate.getCompatibilityStatus()).append("\n");
         sb.append("Counters: ").append(VCSystemMetrics.countersReport());
         return sb.toString();
     }

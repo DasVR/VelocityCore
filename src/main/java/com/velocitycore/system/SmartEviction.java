@@ -98,5 +98,13 @@ public final class SmartEviction {
         return (int) accessCounts.values().stream().filter(c -> c.get() > HOT_THRESHOLD).count();
     }
 
+    public static int getTrackedChunkCount() {
+        return accessCounts.size();
+    }
+
+    public static long getLastDecayTick() {
+        return lastDecayTick;
+    }
+
     private SmartEviction() {}
 }

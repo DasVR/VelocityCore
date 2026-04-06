@@ -2,6 +2,11 @@ package com.velocitycore.system;
 
 import com.velocitycore.VelocityCoreMod;
 import com.velocitycore.config.VCConfig;
+import net.minecraft.world.level.pathfinder.BinaryHeap;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.PathFinder;
+
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class RuntimeSystemGate {
 
     private static final Set<String> disabledSystems = ConcurrentHashMap.newKeySet();
+    private static volatile String lastCompatibilityReport = "not-run";
 
     public static void disable(String systemKey) {
         disabledSystems.add(systemKey);
@@ -25,6 +31,14 @@ public final class RuntimeSystemGate {
         return Collections.unmodifiableSet(disabledSystems);
     }
 
+    public static String getCompatibilityReport() {
+        return lastCompatibilityReport;
+    }
+
+    public static String getCompatibilityStatus() {
+        return getCompatibilityReport();
+    }
+
     /**
      * Startup compatibility gate for fragile/version-sensitive systems.
      * In strict mode we fail fast, otherwise we degrade by disabling impacted subsystems.
@@ -33,7 +47,7 @@ public final class RuntimeSystemGate {
         boolean strict = VCConfig.STRICT_MIXIN_VALIDATION.get();
 
         // S12 Pathfinding throttle is version-fragile; keep an explicit gate.
-        boolean pathfindingHookLooksCompatible = true;
+        boolean pathfindingHookLooksCompatible = validatePathfindingHooks();
         if (!pathfindingHookLooksCompatible) {
             if (strict) {
                 throw new IllegalStateException("VelocityCore strict validation failed: S12 pathfinding hook mismatch");
@@ -42,10 +56,28 @@ public final class RuntimeSystemGate {
             VelocityCoreMod.LOGGER.warn("[VelocityCore] Disabled S12_PATHFINDING due to compatibility validation.");
         }
 
+        lastCompatibilityReport = "strict=" + strict + " disabled=" + disabledSystems;
         if (!disabledSystems.isEmpty()) {
             VelocityCoreMod.LOGGER.warn("[VelocityCore] Runtime degraded systems: {}", disabledSystems);
         } else {
             VelocityCoreMod.LOGGER.info("[VelocityCore] Runtime compatibility checks passed.");
+        }
+    }
+
+    private static boolean validatePathfindingHooks() {
+        try {
+            Method findPath = null;
+            for (Method m : PathFinder.class.getDeclaredMethods()) {
+                if ("findPath".equals(m.getName())) {
+                    findPath = m;
+                    break;
+                }
+            }
+            if (findPath == null) return false;
+            Method pop = BinaryHeap.class.getDeclaredMethod("pop");
+            return Node.class.isAssignableFrom(pop.getReturnType());
+        } catch (ReflectiveOperationException e) {
+            return false;
         }
     }
 
