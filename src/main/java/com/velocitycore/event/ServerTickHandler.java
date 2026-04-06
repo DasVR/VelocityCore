@@ -259,6 +259,7 @@ public final class ServerTickHandler {
         sb.append("S7 decay tick: ").append(SmartEviction.getLastDecayTick()).append("\n");
         sb.append("S9 warmed regions: ").append(RegionFileBuffer.getWarmRegionCount()).append("\n");
         sb.append("Compatibility report: ").append(RuntimeSystemGate.getCompatibilityStatus()).append("\n");
+        sb.append(RuntimeSystemGate.getCompatibilityMatrixReport()).append("\n");
         sb.append("Counters: ").append(VCSystemMetrics.countersReport());
         return sb.toString();
     }

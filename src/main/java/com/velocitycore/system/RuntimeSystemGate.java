@@ -9,6 +9,8 @@ import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.PathFinder;
 
 import java.lang.reflect.Method;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class RuntimeSystemGate {
 
     private static final Set<String> disabledSystems = ConcurrentHashMap.newKeySet();
+    private static final Map<String, Boolean> lastValidationResults = new ConcurrentHashMap<>();
     private static volatile String lastCompatibilityReport = "not-run";
 
     public static void disable(String systemKey) {
@@ -41,12 +44,35 @@ public final class RuntimeSystemGate {
         return getCompatibilityReport();
     }
 
+    public static String getCompatibilityMatrixReport() {
+        return getValidationMatrixString();
+    }
+
+    public static Map<String, Boolean> getValidationResultsSnapshot() {
+        return new LinkedHashMap<>(lastValidationResults);
+    }
+
+    public static String getValidationMatrixString() {
+        Map<String, Boolean> snapshot = getValidationResultsSnapshot();
+        if (snapshot.isEmpty()) return "not-run";
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<String, Boolean> e : snapshot.entrySet()) {
+            if (!first) sb.append(", ");
+            first = false;
+            sb.append(e.getKey()).append("=").append(e.getValue() ? "PASS" : "FAIL");
+        }
+        return sb.toString();
+    }
+
     /**
      * Startup compatibility gate for fragile/version-sensitive systems.
      * In strict mode we fail fast, otherwise we degrade by disabling impacted subsystems.
      */
     public static void runStartupCompatibilityReport() {
         boolean strict = VCConfig.STRICT_MIXIN_VALIDATION.get();
+        disabledSystems.clear();
+        lastValidationResults.clear();
 
         validateOrDisable("S12_PATHFINDING", strict, validatePathfindingHooks(), "pathfinding hook mismatch");
         validateOrDisable("S3_DEFERRED_DECORATOR", strict, validateDeferredDecoratorHooks(), "deferred decorator hook mismatch");
@@ -107,6 +133,7 @@ public final class RuntimeSystemGate {
     }
 
     private static void validateOrDisable(String systemKey, boolean strict, boolean valid, String reason) {
+        lastValidationResults.put(systemKey, valid);
         if (valid) return;
         if (strict) {
             throw new IllegalStateException("VelocityCore strict validation failed: " + systemKey + " " + reason);
