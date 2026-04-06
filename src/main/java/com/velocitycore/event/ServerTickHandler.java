@@ -215,6 +215,23 @@ public final class ServerTickHandler {
     private static String buildVerboseStatusReport() {
         StringBuilder sb = new StringBuilder(buildStatusReport());
         sb.append("\n--- Verbose ---\n");
+        sb.append(systemLine("S1 ChunkGenThrottle", VCConfig.ENABLE_GEN_THROTTLE.get(), true, "S1_ChunkGenThrottle")).append("\n");
+        sb.append(systemLine("S2 SmartChunkCache", VCConfig.ENABLE_NOISE_CACHE.get(), true, "S2_SmartChunkCache")).append("\n");
+        sb.append(systemLine("S3 DeferredDecorator", VCConfig.ENABLE_DEFERRED_DECORATOR.get(), true, "S3_DeferredDecorator")).append("\n");
+        sb.append(systemLine("S4 EntityActivation", VCConfig.ENABLE_AI_THROTTLE.get(), true, "S4_EntityActivation")).append("\n");
+        sb.append(systemLine("S5 SpawnRateLimiter", VCConfig.ENABLE_SPAWN_LIMITER.get(), true, "S5_SpawnRateLimiter")).append("\n");
+        sb.append(systemLine("S6 PreLoadRing", VCConfig.ENABLE_PRELOAD_RING.get(), true, "S6_PreLoadRing")).append("\n");
+        sb.append(systemLine("S7 SmartEviction", VCConfig.ENABLE_SMART_EVICTION.get(), true, "S7_SmartEviction")).append("\n");
+        sb.append(systemLine("S8 ChunkStatusFastPath", VCConfig.ENABLE_FAST_PATH.get(), true, "S8_ChunkStatusFastPath")).append("\n");
+        sb.append(systemLine("S9 RegionFileBuffer", VCConfig.ENABLE_REGION_BUFFER.get(), true, "S9_RegionFileBuffer")).append("\n");
+        sb.append(systemLine("S10 ModdedMobNormalizer", VCConfig.ENABLE_MOB_NORMALIZER.get(), true, "S10_ModdedMobNormalizer")).append("\n");
+        sb.append(systemLine("S11 MobCapGuard", VCConfig.ENABLE_MOB_CAP_GUARD.get(), true, "S11_MobCapGuard")).append("\n");
+        sb.append(systemLine("S12 PathfindingThrottle", VCConfig.ENABLE_PATHFINDING_THROTTLE.get(),
+            RuntimeSystemGate.isEnabled("S12_PATHFINDING", true), "S12_PathfindingThrottle")).append("\n");
+        sb.append(systemLine("S13 ChunkPacketPrioritizer", VCConfig.ENABLE_CHUNK_PRIORITIZER.get(), true, "S13_ChunkPacketPrioritizer")).append("\n");
+        sb.append(systemLine("S14 VelocityHintSender", VCConfig.ENABLE_VELOCITY_HINT.get(), true, "S14_VelocityHintSender")).append("\n");
+        sb.append(systemLine("S15 ClientEntityCuller", VCConfig.ENABLE_ENTITY_CULLER.get(), true, "S15_ClientEntityCuller")).append("\n");
+        sb.append("--- Signals ---\n");
         sb.append("S3 last-run: ").append(VCSystemMetrics.getLastRunTick("S3_DeferredDecorator")).append("\n");
         sb.append("S4 last-run: ").append(VCSystemMetrics.getLastRunTick("S4_EntityActivation")).append("\n");
         sb.append("S5 last-run: ").append(VCSystemMetrics.getLastRunTick("S5_SpawnRateLimiter")).append("\n");
@@ -230,6 +247,11 @@ public final class ServerTickHandler {
         sb.append("Compatibility report: ").append(RuntimeSystemGate.getCompatibilityStatus()).append("\n");
         sb.append("Counters: ").append(VCSystemMetrics.countersReport());
         return sb.toString();
+    }
+
+    private static String systemLine(String name, boolean configEnabled, boolean runtimeEnabled, String metricSystemName) {
+        long lastRun = VCSystemMetrics.getLastRunTick(metricSystemName);
+        return name + " | config=" + configEnabled + " runtime=" + runtimeEnabled + " lastRun=" + lastRun;
     }
 
     private static String buildTelemetryLine() {
