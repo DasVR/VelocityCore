@@ -103,6 +103,7 @@ public final class ServerTickHandler {
      */
     @SubscribeEvent
     public static void onServerAboutToStart(ServerAboutToStartEvent event) {
+        RuntimeSystemGate.runStartupCompatibilityReport();
         if (VCConfig.ENABLE_MOB_NORMALIZER.get()) {
             ModdedMobNormalizer.normalize(event.getServer());
         }

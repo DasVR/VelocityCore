@@ -24,6 +24,7 @@ public final class VCConfig {
 
     // general
     public static ForgeConfigSpec.BooleanValue ENABLE_TPS_TRACKING;
+    public static ForgeConfigSpec.BooleanValue STRICT_MIXIN_VALIDATION;
 
     // chunk_systems
     public static ForgeConfigSpec.BooleanValue ENABLE_GEN_THROTTLE;
@@ -75,6 +76,8 @@ public final class VCConfig {
         b.push("general");
         ENABLE_TPS_TRACKING = b.comment("Master toggle for the TPS measurement loop. Disabling also disables all TPS-scaled behaviour.")
             .define("enable_tps_tracking", true);
+        STRICT_MIXIN_VALIDATION = b.comment("Fail-fast policy toggle for mixin/runtime compatibility checks. True for dev/staging, false to degrade gracefully in production.")
+            .define("strict_mixin_validation", false);
         b.pop();
 
         b.push("chunk_systems");
