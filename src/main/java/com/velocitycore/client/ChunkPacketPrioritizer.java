@@ -1,6 +1,7 @@
 package com.velocitycore.client;
 
 import com.velocitycore.config.VCConfig;
+import com.velocitycore.system.VCSystemMetrics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
@@ -25,6 +26,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * See .cursor/prompts/15_client_systems.md for full implementation brief.
  */
 public final class ChunkPacketPrioritizer {
+    private static volatile int lastDrained = 0;
+
 
     /** Thread-safe queue. Enqueue on network thread; drain on client tick thread. */
     private static final ConcurrentLinkedQueue<PrioritizedChunkPacket> pending =
@@ -69,6 +72,7 @@ public final class ChunkPacketPrioritizer {
         batch.sort(Comparator.comparingInt(p -> p.distanceSq));
 
         int drain = Math.min(batch.size(), DRAIN_PER_TICK);
+        lastDrained = drain;
         for (int i = drain; i < batch.size(); i++) pending.offer(batch.get(i));
 
         ClientPacketListener connection = mc.getConnection();
@@ -76,6 +80,15 @@ public final class ChunkPacketPrioritizer {
         for (int i = 0; i < drain; i++) {
             connection.handleLevelChunkWithLight(batch.get(i).packet);
         }
+        VCSystemMetrics.increment("client.s13_drained", drain, 0L);
+    }
+
+    public static int getPendingCount() {
+        return pending.size();
+    }
+
+    public static int getLastDrained() {
+        return lastDrained;
     }
 
     private ChunkPacketPrioritizer() {}

@@ -1,6 +1,7 @@
 package com.velocitycore.mixin;
 
 import com.velocitycore.system.PathfindingThrottle;
+import com.velocitycore.system.RuntimeSystemGate;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
@@ -36,6 +37,7 @@ public abstract class MixinPathFinder {
     )
     private void vc_setupPathBudget(BlockPathTypes[] pathTypes, Entity entity, int maxVisitedNodes,
             CallbackInfoReturnable<Path> cir) {
+        if (!RuntimeSystemGate.isEnabled("S12_PATHFINDING", true)) return;
         Mob mob = (entity instanceof Mob m) ? m : null;
         PathfindingThrottle.prepareBudget(mob);
     }
@@ -55,6 +57,7 @@ public abstract class MixinPathFinder {
     )
     private void vc_checkNodeBudget(BlockPathTypes[] pathTypes, Entity entity, int maxVisitedNodes,
             CallbackInfoReturnable<Path> cir) {
+        if (!RuntimeSystemGate.isEnabled("S12_PATHFINDING", true)) return;
         if (PathfindingThrottle.exceedsBudget()) {
             cir.setReturnValue(null);
         }

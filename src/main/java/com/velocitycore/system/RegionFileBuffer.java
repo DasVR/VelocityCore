@@ -62,6 +62,10 @@ public final class RegionFileBuffer {
         ioThread.submit(() -> warmRegionFile(level, chunkPos));
     }
 
+    public static int getWarmRegionCount() {
+        return warmedRegionTimes.size();
+    }
+
     /**
      * Background task: reads up to WARM_SECTOR_COUNT sectors from the region file to prime
      * the OS page cache. The read buffer is immediately discarded.

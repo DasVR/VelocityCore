@@ -64,6 +64,10 @@ public final class SpawnRateLimiter {
         lastSpawnTick.entrySet().removeIf(e -> e.getValue() < cutoff);
     }
 
+    public static int getTrackedChunkCount() {
+        return lastSpawnTick.size();
+    }
+
     /** Returns the cooldown tick count for the current TPS. */
     private static int cooldownTicks() {
         double tps = ChunkGenThrottle.getSmoothedTps();

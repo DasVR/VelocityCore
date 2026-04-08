@@ -1,6 +1,7 @@
 package com.velocitycore.client;
 
 import com.velocitycore.config.VCConfig;
+import com.velocitycore.system.VCSystemMetrics;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -34,6 +35,7 @@ public final class ClientEntityCuller {
     private static final Map<Integer, long[]> occlusionCache = new HashMap<>();
     private static long clientTick = 0L;
     private static final int OCCLUSION_CACHE_TICKS = 4;
+    private static int lastCacheSize = 0;
 
     /**
      * Advances the client tick counter and prunes the occlusion cache.
@@ -44,6 +46,7 @@ public final class ClientEntityCuller {
     public static void tick(Minecraft mc) {
         clientTick++;
         if (clientTick % 60 == 0) pruneOcclusionCache();
+        lastCacheSize = occlusionCache.size();
     }
 
     /**
@@ -63,7 +66,10 @@ public final class ClientEntityCuller {
 
         // 1. Distance cull
         double cullRange = VCConfig.ENTITY_CULL_RANGE.get();
-        if (entity.distanceTo(camera.getEntity()) > cullRange) return true;
+        if (entity.distanceTo(camera.getEntity()) > cullRange) {
+            VCSystemMetrics.increment("client.s15.distance_culled", 1L, clientTick);
+            return true;
+        }
 
         // 2. Occlusion cull (cached)
         long[] cached = occlusionCache.get(entity.getId());
@@ -73,6 +79,9 @@ public final class ClientEntityCuller {
 
         boolean occluded = isOccluded(entity, camera, level);
         occlusionCache.put(entity.getId(), new long[]{clientTick, occluded ? 1L : 0L});
+        if (occluded) {
+            VCSystemMetrics.increment("client.s15.occlusion_culled", 1L, clientTick);
+        }
         return occluded;
     }
 
@@ -108,6 +117,10 @@ public final class ClientEntityCuller {
     private static void pruneOcclusionCache() {
         long cutoff = clientTick - (long)(OCCLUSION_CACHE_TICKS * 10);
         occlusionCache.entrySet().removeIf(e -> e.getValue()[0] < cutoff);
+    }
+
+    public static int getCacheSize() {
+        return lastCacheSize;
     }
 
     private ClientEntityCuller() {}
