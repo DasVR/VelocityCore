@@ -7,7 +7,7 @@
   "mixins": [
     "MixinChunkGenerator",
     "MixinServerChunkCache",
-    "MixinNoiseBasedChunkGenerator",
+    "MixinClimateSampler",
     "MixinNaturalSpawner",
     "MixinMob",
     "MixinPathFinder"

@@ -93,7 +93,7 @@ repositories {
 
 dependencies {
     // Forge 1.20.1-47.3.0
-    minecraft 'net.minecraftforge:forge:1.20.1-47.3.0'
+    minecraft 'net.minecraftforge:forge:1.20.1-47.4.5'
 
     // Mixin annotation processor (built into Forge 1.20.x, but processor must be declared explicitly)
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
